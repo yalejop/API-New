@@ -7,6 +7,8 @@ use Illuminate\Foundation\Testing\WithFaker;
 use phpDocumentor\Reflection\Types\This;
 use Tests\TestCase;
 
+use App\Post;
+
 class PostControllerTest extends TestCase
 {
     use RefreshDatabase;
@@ -14,7 +16,7 @@ class PostControllerTest extends TestCase
     public function test_store()
     {
         //$this->withoutExceptionHandling();
-        $response = $this->json('POST', 'api/posts', [
+        $response = $this->json('POST', '/api/posts', [
             'title' => 'El post de prueba'
         ]);
 
@@ -28,7 +30,7 @@ class PostControllerTest extends TestCase
     public function test_validate_title()
     {
         //$this->withoutExceptionHandling();
-        $response = $this->json('POST', 'api/posts', [
+        $response = $this->json('POST', '/api/posts', [
             'title' => ''
         ]);
 
@@ -36,5 +38,23 @@ class PostControllerTest extends TestCase
         $response->assertStatus(422)
             ->assertJsonValidationErrors('title');
 
+    }
+
+    public function test_show()
+    {
+        $post = factory(Post::class)->create();
+
+        $response = $this->json('GET', "/api/posts/$post->id"); //id = 1
+
+        $response->assertJsonStructure(['id', 'title', 'created_at', 'updated_at'])
+        ->assertJson(['title' => $post->title])
+        ->assertStatus(200); //ok
+    }
+
+    public function test_404_show()
+    {
+        $response = $this->json('GET', "/api/posts/1000"); //id = 1000
+
+        $response->assertStatus(404); //ok
     }
 }
